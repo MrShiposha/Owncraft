@@ -2,7 +2,11 @@
 #	pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 #endif 
 
+#include <osgViewer/Viewer>
+
 int main()
 {
-	return 0;
+	osgViewer::Viewer viewer;
+
+	return viewer.run();
 }
