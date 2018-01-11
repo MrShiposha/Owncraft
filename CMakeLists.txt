@@ -1,17 +1,13 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.8)
 PROJECT(Owncraft)
 
-INCLUDE(cmakemodules/include.cmake)
+INCLUDE(cmakemodules/includes.cmake)
 INCLUDE(cmakemodules/libraries.cmake)
 INCLUDE(cmakemodules/sources.cmake)
-
+INCLUDE(cmakemodules/definitions.cmake)
 
 
 ADD_EXECUTABLE(${CMAKE_PROJECT_NAME} ${SOURCES})
 TARGET_LINK_LIBRARIES(${CMAKE_PROJECT_NAME} ${LIBRARIES})
 
-ADD_CUSTOM_COMMAND(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
-	COMMAND ${CMAKE_COMMAND} -E copy_directory
-	"${PROJECT_SOURCE_DIR}/bin"
-	$<TARGET_FILE_DIR:${CMAKE_PROJECT_NAME}>
-)
+INCLUDE(cmakemodules/postbuild.cmake)
