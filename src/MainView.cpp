@@ -21,6 +21,11 @@ void MainView::place_world(const World &world)
 	viewer.setSceneData(world.root());
 }
 
+void MainView::place_light(osg::ref_ptr<osg::Light> light)
+{
+	viewer.setLight(light);
+}
+
 int MainView::run()
 {
 	return viewer.run();
