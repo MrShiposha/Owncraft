@@ -11,9 +11,9 @@ MainView::MainView(const osg::GraphicsContext::ScreenIdentifier &screen_id)
 	viewer.setUpViewOnSingleScreen(screen_id.screenNum);
 }
 
-void MainView::place_player(const Player &)
+void MainView::place_player(const Player &player)
 {
-	viewer.setCameraManipulator(new osgGA::TrackballManipulator());
+	viewer.setCameraManipulator(player.getManipulator());
 }
 
 void MainView::place_world(const World &world)

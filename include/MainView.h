@@ -3,8 +3,7 @@
 
 #include <osgViewer/Viewer>
 #include <osg/GraphicsContext>
-
-class Player;
+#include "Player.h"
 
 class World;
 
