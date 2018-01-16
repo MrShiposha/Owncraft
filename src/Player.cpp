@@ -2,22 +2,52 @@
 #include <osgViewer/View>
 #include "Player.h"
 
-const float moveSpeed = 25;
+const float moveSpeed = 100;
 const float inputTimeInterval = 0.02;
 
 osg::Vec3d tempMov;
 double maxTick = inputTimeInterval;
+
+float getXnormalized(const osgGA::GUIEventAdapter &ea, float x) {
+    return (x-ea.getXmin())/(ea.getXmax()-ea.getXmin())*2.0f-1.0f;
+}
+float getYnormalized(const osgGA::GUIEventAdapter &ea, float y) {
+    return (y-ea.getYmin())/(ea.getYmax()-ea.getYmin())*2.0f-1.0f;
+}
+
+bool Player::Manipulator::performMouseDeltaMovement( const float dx, const float dy )
+{
+    // world up vector
+    osg::CoordinateFrame coordinateFrame = getCoordinateFrame( _eye );
+    osg::Vec3d localUp = getUpVector( coordinateFrame );
+
+    rotateYawPitch( _rotation, dx, dy, localUp );
+    //std::cout << "dx=" << dx << ", dy=" << dy << std::endl;
+
+    return true;
+}
+
+bool Player::Manipulator::handleMouseMove(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &us) {
+    float dx = ea.getXnormalized() - getXnormalized(ea, _mouseCenterX);
+    float dy = ea.getYnormalized() - getYnormalized(ea, _mouseCenterY);
+
+    if( dx == 0.f && dy == 0.f )
+        return false;
+
+    addMouseEvent( ea );
+    centerMousePointer( ea, us );
+
+    if( _ga_t0.get() == NULL || _ga_t1.get() == NULL )
+        return false;
+
+    return performMouseDeltaMovement( dx, dy );
+}
 
 bool Player::Manipulator::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa)
 {
 
     // Still use first person manipulator for camera movements (Inherited class function)
     osgGA::FirstPersonManipulator::handle(ea, aa);
-
-//    if (!_viewer)
-//    {
-//        return false;
-//    }
 
     // Set the viewer's "eye" position, which is located at the center of the camera.
     osg::Vec3d eyePos;
@@ -99,52 +129,7 @@ bool Player::Manipulator::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIAct
     return false;
 }
 
-bool Player::Manipulator::performMovement()
-{
-    // return if less then two events have been added
-    if( _ga_t0.get() == NULL || _ga_t1.get() == NULL )
-    {
-        return false;
-    }
-
-    // get delta time, throw warning if error with delta time
-    double eventTimeDelta = _ga_t0->getTime() - _ga_t1->getTime();
-    if( eventTimeDelta < 0. )
-    {
-        OSG_WARN << "Manipulator warning: eventTimeDelta = " << eventTimeDelta << std::endl;
-        eventTimeDelta = 0.;
-    }
-
-    // get deltaX and deltaY
-    float dx = _ga_t0->getXnormalized() - _ga_t1->getXnormalized();
-    float dy = _ga_t0->getYnormalized() - _ga_t1->getYnormalized();
-
-    // return if there is no movement.
-    if( dx == 0.0 && dy == 0.0 )
-    {
-        return false;
-    }
-
-
-    //performMouseDeltaMovement(dx, dy);
-
-    // call appropriate methods
-    unsigned int buttonMask = _ga_t1->getButtonMask();
-    if( buttonMask == osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON )
-    {
-        return performMovementLeftMouseButton( eventTimeDelta, dx, dy );
-    }
-    else if( buttonMask == osgGA::GUIEventAdapter::MIDDLE_MOUSE_BUTTON ||
-             buttonMask == (osgGA::GUIEventAdapter::LEFT_MOUSE_BUTTON | osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON) )
-    {
-        //return performMovementMiddleMouseButton( eventTimeDelta, dx, dy );
-    }
-    else if( buttonMask == osgGA::GUIEventAdapter::RIGHT_MOUSE_BUTTON )
-    {
-        //return performMovementRightMouseButton( eventTimeDelta, dx, dy );
-    }
-
-    return false;
-}
-
-
+//bool Player::Manipulator::performMovementLeftMouseButton(const double dt, const double dx, const double dy) {
+//    std::cout << "dx=" << dx << ", dy=" << dy << std::endl;
+//    return FirstPersonManipulator::performMovementLeftMouseButton(dt, dx, dy);
+//}

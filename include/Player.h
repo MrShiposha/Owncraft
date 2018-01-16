@@ -13,14 +13,13 @@ public:
         Manipulator() {}
 
     protected:
-        //virtual bool performMouseDeltaMovement(const float dx, const float dy);
+        virtual bool performMouseDeltaMovement(const float dx, const float dy);
 
-        //virtual bool handleMouseMove(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &us);
+        virtual bool handleMouseMove(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &us);
 
         virtual bool handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa);
 
-        virtual bool performMovement();
-
+        //virtual bool performMovementLeftMouseButton( const double /*eventTimeDelta*/, const double dx, const double dy );
     private:
         osg::Timer mainTimer;
     };
