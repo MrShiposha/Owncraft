@@ -16,6 +16,8 @@ public:
 
 	void place_world(const World &);
 
+	void place_light(osg::ref_ptr<osg::Light>);
+
 	int run();
 
 private:

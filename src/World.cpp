@@ -7,6 +7,8 @@
 #include <osg/ShapeDrawable>
 #include <osgDB/ReadFile>
 #include <osg/MatrixTransform>
+#include <osg/Texture2D>
+#include <osgUtil/SmoothingVisitor>
 
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
@@ -23,7 +25,7 @@ World::World(const std::string & file_path)
 	std::stringstream line_stream;
 
 
-	double x, y, z;
+	int x, y, z;
 	std::string block_name;
 
 	while (!in.eof())
@@ -66,6 +68,100 @@ const osg::ref_ptr<osg::Node> World::root() const
 	return root;
 }
 
+
+osg::ref_ptr<osg::Node> load_block(const std::string &block_name)
+{
+	osg::ref_ptr<osg::Vec3Array> vertices = new osg::Vec3Array;
+	osg::ref_ptr<osg::Vec2Array> texcoords_side = new osg::Vec2Array();
+
+	// front
+	vertices->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
+	vertices->push_back(osg::Vec3(1.0f, 0.0f, 0.0f));
+	vertices->push_back(osg::Vec3(1.0f, 0.0f, 1.0f));
+	vertices->push_back(osg::Vec3(0.0f, 0.0f, 1.0f));
+
+	texcoords_side->push_back(osg::Vec2(0.0f, 0.0f));
+	texcoords_side->push_back(osg::Vec2(0.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 0.0f));
+
+	// ------ top 
+	vertices->push_back(osg::Vec3(0.0f, 0.0f, 1.0f));
+	vertices->push_back(osg::Vec3(1.0f, 0.0f, 1.0f));
+	vertices->push_back(osg::Vec3(1.0f, 1.0f, 1.0f));
+	vertices->push_back(osg::Vec3(0.0f, 1.0f, 1.0f));
+
+	texcoords_side->push_back(osg::Vec2(0.0f, 0.0f));
+	texcoords_side->push_back(osg::Vec2(0.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 0.0f));
+
+	// ------ back 
+	vertices->push_back(osg::Vec3(0.0f, 1.0f, 0.0f));
+	vertices->push_back(osg::Vec3(1.0f, 1.0f, 0.0f));
+	vertices->push_back(osg::Vec3(1.0f, 1.0f, 1.0f));
+	vertices->push_back(osg::Vec3(0.0f, 1.0f, 1.0f));
+
+	texcoords_side->push_back(osg::Vec2(0.0f, 0.0f));
+	texcoords_side->push_back(osg::Vec2(0.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 0.0f));
+
+
+	// ------ Bottom 
+	vertices->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
+	vertices->push_back(osg::Vec3(1.0f, 0.0f, 0.0f));
+	vertices->push_back(osg::Vec3(1.0f, 1.0f, 0.0f));
+	vertices->push_back(osg::Vec3(0.0f, 1.0f, 0.0f));
+
+	texcoords_side->push_back(osg::Vec2(0.0f, 0.0f));
+	texcoords_side->push_back(osg::Vec2(0.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 0.0f));
+
+
+	// ------ Left 
+	vertices->push_back(osg::Vec3(0.0f, 0.0f, 0.0f));
+	vertices->push_back(osg::Vec3(0.0f, 1.0f, 0.0f));
+	vertices->push_back(osg::Vec3(0.0f, 1.0f, 1.0f));
+	vertices->push_back(osg::Vec3(0.0f, 0.0f, 1.0f));
+
+	texcoords_side->push_back(osg::Vec2(0.0f, 0.0f));
+	texcoords_side->push_back(osg::Vec2(0.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 0.0f));
+
+
+	// ------ Right 
+	vertices->push_back(osg::Vec3(1.0f, 0.0f, 0.0f));
+	vertices->push_back(osg::Vec3(1.0f, 1.0f, 0.0f));
+	vertices->push_back(osg::Vec3(1.0f, 1.0f, 1.0f));
+	vertices->push_back(osg::Vec3(1.0f, 0.0f, 1.0f));
+
+	texcoords_side->push_back(osg::Vec2(0.0f, 0.0f));
+	texcoords_side->push_back(osg::Vec2(0.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 1.0f));
+	texcoords_side->push_back(osg::Vec2(1.0f, 0.0f));
+
+	osg::ref_ptr<osg::Geometry> geom = new osg::Geometry;
+	geom->setVertexArray(vertices);
+	geom->addPrimitiveSet(new osg::DrawArrays(GL_QUADS, 0, 24));
+	osgUtil::SmoothingVisitor::smooth(*geom);
+
+	osg::ref_ptr<osg::Texture2D> texture_side = new osg::Texture2D();
+	osg::ref_ptr<osg::Image> image = osgDB::readImageFile("assets/blocks/" + block_name + ".png");
+	texture_side->setImage(image);
+
+	geom->setTexCoordArray(0, texcoords_side);
+	geom->getOrCreateStateSet()->setTextureAttributeAndModes(0, texture_side);
+	texture_side->setUnRefImageDataAfterApply(true);
+
+	osg::ref_ptr<osg::Geode> geode = new osg::Geode();
+	geode->addChild(geom);
+
+	return geode;
+}
+
 void World::load_blocks()
 {
 	using namespace boost::filesystem;
@@ -75,14 +171,16 @@ void World::load_blocks()
 	auto directory_range = boost::make_iterator_range(directory_iterator(blocks_path), {});
 
 	path block_path;
+	std::string block_name;
 	for(auto &block_entry : directory_range) 
 	{
 		block_path = block_entry.path();
+		block_name = block_path.stem().string();
 
-		if (is_regular_file(block_path) && block_path.filename().extension() == ".obj")
+		if (is_regular_file(block_path) && block_path.filename().extension() == ".png")
 		{
-			blocks[block_path.stem().string()] = osgDB::readRefNodeFile(block_path.string());
-			groups[block_path.stem().string()] = new osg::Group();
+			blocks[block_name] = load_block(block_name);
+			groups[block_name] = new osg::Group();
 		}
 	}
 }
