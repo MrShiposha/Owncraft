@@ -148,14 +148,12 @@ osg::ref_ptr<osg::Node> load_block(const std::string &block_name)
 	geom->addPrimitiveSet(new osg::DrawArrays(GL_QUADS, 0, 24));
 	osgUtil::SmoothingVisitor::smooth(*geom);
 
-	geom->setTexCoordArray(0, texcoords_side.get(), osg::Array::Binding::BIND_PER_VERTEX);
-
 	osg::ref_ptr<osg::Texture2D> texture_side = new osg::Texture2D();
 	osg::ref_ptr<osg::Image> image = osgDB::readImageFile("assets/blocks/" + block_name + ".png");
 	texture_side->setImage(image);
 
-	geom->setTexCoordArray(0, texcoords_side.get());
-	geom->getOrCreateStateSet()->setTextureAttributeAndModes(0, texture_side.get());
+	geom->setTexCoordArray(0, texcoords_side);
+	geom->getOrCreateStateSet()->setTextureAttributeAndModes(0, texture_side);
 	texture_side->setUnRefImageDataAfterApply(true);
 
 	osg::ref_ptr<osg::Geode> geode = new osg::Geode();
