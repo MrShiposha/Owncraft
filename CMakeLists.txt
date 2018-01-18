@@ -6,6 +6,7 @@ INCLUDE(cmakemodules/libraries.cmake)
 INCLUDE(cmakemodules/sources.cmake)
 INCLUDE(cmakemodules/definitions.cmake)
 
+ADD_SUBDIRECTORY(tool)
 
 ADD_EXECUTABLE(${CMAKE_PROJECT_NAME} ${SOURCES})
 TARGET_LINK_LIBRARIES(${CMAKE_PROJECT_NAME} ${LIBRARIES})
