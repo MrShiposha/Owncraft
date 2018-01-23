@@ -9,6 +9,13 @@
 MainView::MainView(const osg::GraphicsContext::ScreenIdentifier &screen_id)
 {
 	viewer.setUpViewOnSingleScreen(screen_id.screenNum);
+
+	// Hide mouse pointer
+	osgViewer::Viewer::Windows windows;
+	viewer.getWindows(windows);
+
+	for (auto &&window : windows)
+		window->setCursor(osgViewer::GraphicsWindow::NoCursor);
 }
 
 void MainView::place_player(const Player &player)
