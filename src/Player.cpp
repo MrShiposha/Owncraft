@@ -2,7 +2,7 @@
 #include <osgViewer/View>
 #include "Player.h"
 
-const float moveSpeed = 100;
+const float moveSpeed = 0.6;
 const float inputTimeInterval = 0.02;
 
 osg::Vec3d tempMov;
@@ -94,17 +94,15 @@ bool Player::Manipulator::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIAct
             switch(ea.getKey())
             {
                 case 'w':
-                    tempMov.set(0, 0, 0);
+				case 's':
+                    tempMov.set(tempMov.x(), tempMov.y(), 0);
                     break;
-                case 'a':
-                    tempMov.set(0, 0, 0);
+                
+				case 'a':
+				case 'd':
+                    tempMov.set(0, tempMov.y(), tempMov.z());
                     break;
-                case 's':
-                    tempMov.set(0, 0, 0);
-                    break;
-                case 'd':
-                    tempMov.set(0, 0, 0);
-                    break;
+
                 default:
                     break;
             }
