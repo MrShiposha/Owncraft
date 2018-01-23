@@ -2,9 +2,10 @@
 
 #include <iostream>
 
-#include <MainView.h>
-#include <World.h>
-#include <Player.h>
+#include "MainView.h"
+#include "World.h"
+#include "Player.h"
+#include "SkyBox.h"
 
 int process_exception(const std::runtime_error &);
 
@@ -25,7 +26,9 @@ int main()
 
 		main_view.place_light(light);
 
-		World world("assets/world.txt");
+		osg::ref_ptr<SkyBox> skybox = new SkyBox("galaxy");
+
+		World world(skybox, "assets/world.txt");
 		main_view.place_world(world);
 
 		Player player;

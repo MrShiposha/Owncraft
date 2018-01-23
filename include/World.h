@@ -6,18 +6,21 @@
 
 #include <osg/Geode>
 
+class SkyBox;
+
 class World
 {
 public:
-	World(const std::string &file_path);
+	World(osg::ref_ptr<SkyBox>, const std::string &file_path);
 
 	const osg::ref_ptr<osg::Node> root() const;
 
 private:
 	void load_blocks();
 
-	std::map<std::string, osg::ref_ptr<osg::Group>> groups;
+	osg::ref_ptr<SkyBox> skybox;
 
+	std::map<std::string, osg::ref_ptr<osg::Group>> groups;
 	std::map<std::string, osg::ref_ptr<osg::Node>> blocks;
 };
 

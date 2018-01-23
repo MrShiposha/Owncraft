@@ -1,5 +1,3 @@
-#include <World.h>
-
 #include <fstream>
 #include <sstream>
 
@@ -13,7 +11,11 @@
 #include <boost/filesystem.hpp>
 #include <boost/range/iterator_range.hpp>
 
-World::World(const std::string & file_path)
+#include "World.h"
+#include "SkyBox.h"
+
+World::World(osg::ref_ptr<SkyBox> skybox, const std::string & file_path)
+	: skybox(skybox)
 {
 	load_blocks();
 
@@ -60,10 +62,22 @@ World::World(const std::string & file_path)
 
 const osg::ref_ptr<osg::Node> World::root() const
 {
-	osg::ref_ptr<osg::Group> root = new osg::Group();
+	osg::ref_ptr<osg::Group> blocks = new osg::Group();
 
 	for (auto &block_group : groups)
-		root->addChild(block_group.second);
+		blocks->addChild(block_group.second);
+
+	osg::ref_ptr<osg::Geode> skybox_geode = new osg::Geode();
+	skybox_geode->addDrawable(new osg::ShapeDrawable
+	(
+		new osg::Sphere(osg::Vec3(), blocks->getBound().radius())
+	));
+
+	skybox->addChild(skybox_geode);
+
+	osg::ref_ptr<osg::Group> root = new osg::Group();
+	root->addChild(skybox);
+	root->addChild(blocks);
 
 	return root;
 }
