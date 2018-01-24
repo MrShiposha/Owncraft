@@ -2,7 +2,7 @@
 #include <osgViewer/View>
 #include "Player.h"
 
-const float moveSpeed = 100;
+const float moveSpeed = 0.2;
 const float inputTimeInterval = 0.02;
 
 osg::Vec3d tempMov;
@@ -43,6 +43,32 @@ bool Player::Manipulator::handleMouseMove(const osgGA::GUIEventAdapter &ea, osgG
     return performMouseDeltaMovement( dx, dy );
 }
 
+osg::Vec3d getHPRfromQuat(osg::Quat quat){
+// From: http://guardian.curtin.edu.au/cga/faq/angles.html
+// Except OSG exchanges pitch & roll from what is listed on that
+    double qx = quat.x();
+    double qy = quat.y();
+    double qz = quat.z();
+    double qw = quat.w();
+
+    double sqx = qx * qx;
+    double sqy = qy * qy;
+    double sqz = qz * qz;
+    double sqw = qw * qw;
+
+    double term1 = 2*(qx*qy+qw*qz);
+    double term2 = sqw+sqx-sqy-sqz;
+    double term3 = -2*(qx*qz-qw*qy);
+    double term4 = 2*(qw*qx+qy*qz);
+    double term5 = sqw - sqx - sqy + sqz;
+
+    double heading = atan2(term1, term2);
+    double pitch = atan2(term4, term5);
+    double roll = asin(term3);
+
+    return osg::Vec3d( pitch, roll, heading );
+}
+
 bool Player::Manipulator::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &aa)
 {
 
@@ -56,64 +82,10 @@ bool Player::Manipulator::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIAct
 
     eyePos = matrix.getTrans();
 
-    osg::Quat camRotation = matrix.getRotate();
+    auto fullCamRotation = getHPRfromQuat(matrix.getRotate());
+    osg::Quat camRotation(fullCamRotation.z(), osg::Z_AXIS);
 
-    switch(ea.getEventType())
-    {
-        case(osgGA::GUIEventAdapter::KEYDOWN):
-        {
-            // Movement of the camera correlates with W, A, S, D
-            switch(ea.getKey())
-            {
-                case 'w':
-                    tempMov.z() = -moveSpeed;
-
-                    break;
-                case 'a':
-                    tempMov.x() = -moveSpeed;
-
-                    break;
-                case 's':
-                    tempMov.z() = moveSpeed;
-
-                    break;
-                case 'd':
-                    tempMov.x() = moveSpeed;
-
-                    break;
-                default:
-                    break;
-            }
-
-            default:
-                break;
-        }
-
-        case(osgGA::GUIEventAdapter::KEYUP):
-        {
-            switch(ea.getKey())
-            {
-                case 'w':
-                    tempMov.set(0, 0, 0);
-                    break;
-                case 'a':
-                    tempMov.set(0, 0, 0);
-                    break;
-                case 's':
-                    tempMov.set(0, 0, 0);
-                    break;
-                case 'd':
-                    tempMov.set(0, 0, 0);
-                    break;
-                default:
-                    break;
-            }
-
-            //default:
-            break;
-        }
-
-    }
+    //Do movement
     eyePos += camRotation * tempMov;
     matrix.setTrans(eyePos);
 
@@ -125,8 +97,71 @@ bool Player::Manipulator::handle(const osgGA::GUIEventAdapter &ea, osgGA::GUIAct
         maxTick += inputTimeInterval;
     }
 
-
     return false;
+}
+
+bool Player::Manipulator::handleKeyDown(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &us) {
+    // Movement of the camera correlates with W, A, S, D
+    switch(ea.getKey())
+    {
+        case 'w':
+            tempMov.y() = moveSpeed;
+            break;
+        case 'a':
+            tempMov.x() = -moveSpeed;
+            break;
+        case 's':
+            tempMov.y() = -moveSpeed;
+            break;
+        case 'd':
+            tempMov.x() = moveSpeed;
+            break;
+
+        case osgGA::GUIEventAdapter::KEY_Space:
+            tempMov.z() = moveSpeed;
+            break;
+        case osgGA::GUIEventAdapter::KEY_Shift_L:
+            tempMov.z() = -moveSpeed;
+            break;
+
+        default:
+            return false;
+    }
+    keyDowns[ea.getKey()] = true;
+
+    return true;
+}
+
+bool Player::Manipulator::handleKeyUp(const osgGA::GUIEventAdapter &ea, osgGA::GUIActionAdapter &us) {
+    switch(ea.getKey())
+    {
+//                tempMov._v;
+        case 'w':
+            tempMov.y() = keyDowns['s'] ? -moveSpeed : 0;;
+            break;
+        case 'a':
+            tempMov.x() = keyDowns['d'] ? moveSpeed : 0;
+            break;
+        case 's':
+            tempMov.y() = keyDowns['w'] ? moveSpeed : 0;
+            break;
+        case 'd':
+            tempMov.x() = keyDowns['a'] ? -moveSpeed : 0;;
+            break;
+
+        case osgGA::GUIEventAdapter::KEY_Space:
+            tempMov.z() = keyDowns[osgGA::GUIEventAdapter::KEY_Shift_L] ? -moveSpeed : 0;
+            break;
+        case osgGA::GUIEventAdapter::KEY_Shift_L:
+            tempMov.z() = keyDowns[osgGA::GUIEventAdapter::KEY_Space] ? moveSpeed : 0;
+            break;
+
+        default:
+            return false;
+    }
+    keyDowns[ea.getKey()] = false;
+
+    return true;
 }
 
 //bool Player::Manipulator::performMovementLeftMouseButton(const double dt, const double dx, const double dy) {
